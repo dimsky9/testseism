@@ -91,7 +91,7 @@ STATIONS = [
 #Konstanta spectrogram
 WINDOW_SEC = 120    
 PUSH_SEC   = 1     
-N_FREQ     = 48     
+N_FREQ     = 24     
 N_TIME     = 150    
 
 
