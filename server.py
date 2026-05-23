@@ -26,7 +26,13 @@ STATIONS = [
     {"net": "GE", "sta": "LHMI", "cha": "BHZ", "label": "Aceh","thr_on": 10.0, "thr_off": 0.8},
     {"net": "GE", "sta": "GSI", "cha": "BHZ", "label": "Nias", "thr_on": 10.0, "thr_off": 0.8},
     {"net": "GE", "sta": "MNAI", "cha": "BHZ", "label": "Bengkulu",  "thr_on": 10.0, "thr_off": 0.8},
+
+    # AU network dari IRIS — Christmas Island (dekat Jawa bagian selatan)
+    {"net": "AU", "sta": "XMI",  "cha": "BHZ", "label": "Christmas Island",
+     "thr_on": 10.0, "thr_off": 0.8, "server": "iris"},
 ]
+
+
 
 WINDOW_SEC = 120
 PUSH_SEC   = 1   
@@ -36,6 +42,12 @@ N_TIME = 150
 
 GEOFON_HOST = "geofon.gfz-potsdam.de"
 GEOFON_PORT = 18000
+
+IRIS_HOST   = "rtserve.iris.washington.edu"
+IRIS_PORT   = 18000
+
+STATIONS_GEOFON = [s for s in STATIONS if s.get("server","geofon") == "geofon"]
+STATIONS_IRIS   = [s for s in STATIONS if s.get("server") == "iris"]
 
 # 
 buffers = {
