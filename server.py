@@ -33,7 +33,6 @@ STATIONS = [
 ]
 
 
-
 WINDOW_SEC = 120
 PUSH_SEC   = 1   
 
@@ -83,7 +82,7 @@ class MultiStationClient(EasySeedLinkClient):
             buf["data"].extend(trace.data.tolist())
             buf["status"] = "live"
 
-           
+
             arr = np.array(buf["data"])
             if len(arr) > sr * 20:
                 cft = classic_sta_lta(arr, int(1 * sr), int(10 * sr))
@@ -99,23 +98,49 @@ class MultiStationClient(EasySeedLinkClient):
                 else:
                     buf["magnitude"] = None
 
-# 
-def run_seedlink():
+    def on_seedlink_error(self, error):
+        print(f"[SeedLink Error] {error}")
+
+# ── PERBAIKAN: Dua thread terpisah untuk GEOFON dan IRIS ──
+
+def _run_single_seedlink(host, port, station_list, server_name):
+    """Jalankan satu client SeedLink ke server tertentu."""
     while True:
         try:
-            client = MultiStationClient(f"{GEOFON_HOST}:{GEOFON_PORT}")
+            client = MultiStationClient(f"{host}:{port}")
 
-            for cfg in STATIONS:
-                client.select_stream(cfg["net"], cfg["sta"], cfg["cha"])
+            for cfg in station_list:
+                try:
+                    client.select_stream(cfg["net"], cfg["sta"], cfg["cha"])
+                    print(f"  [{server_name}] sub: {cfg['net']}.{cfg['sta']}.{cfg['cha']}")
+                except Exception as e:
+                    print(f"  [{server_name}] skip {cfg['sta']}: {e}")
 
-            print("SeedLink connected")
+            print(f"[{server_name}] SeedLink connected ({host}:{port})")
             client.run()
 
         except Exception as e:
-            print("Reconnect:", e)
+            print(f"[{server_name}] Reconnect: {e}")
             time.sleep(10)
 
-threading.Thread(target=run_seedlink, daemon=True).start()
+
+def run_seedlink_geofon():
+    if not STATIONS_GEOFON:
+        print("[GEOFON] Tidak ada stasiun untuk di-subscribe")
+        return
+    _run_single_seedlink(GEOFON_HOST, GEOFON_PORT, STATIONS_GEOFON, "GEOFON")
+
+
+def run_seedlink_iris():
+    if not STATIONS_IRIS:
+        print("[IRIS] Tidak ada stasiun untuk di-subscribe")
+        return
+    _run_single_seedlink(IRIS_HOST, IRIS_PORT, STATIONS_IRIS, "IRIS")
+
+
+# Jalankan kedua server di thread terpisah
+threading.Thread(target=run_seedlink_geofon, daemon=True).start()
+threading.Thread(target=run_seedlink_iris, daemon=True).start()
 
 #
 def compute_spec(data, sr):
